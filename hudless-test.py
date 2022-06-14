@@ -1,5 +1,6 @@
 import sys
 import os
+import subprocess
 
 BLENDER_PATH = os.path("C:\Program Files\Blender Foundation\Blender 3.1\blender.exe")
 
