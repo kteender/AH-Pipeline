@@ -1,3 +1,4 @@
+from re import sub
 import sys
 import os
 import subprocess
@@ -10,6 +11,8 @@ def launch_blender(**kwargs):
     extension = ""
     for k in kwargs:
         extension.append(" %s" % (k))
+    sp = blender + extension
+    subprocess.run(sp)
 
 
 launch_blender('--background', '--python', 'scratchpad.py')
