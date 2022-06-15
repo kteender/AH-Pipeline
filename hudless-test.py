@@ -22,6 +22,7 @@ def folder_prep():
 
 def maya_exports(wd):
     #wd = str directory
+    return
 
 
 def launch_blender(*args):
