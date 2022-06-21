@@ -1,8 +1,9 @@
 import maya.cmds as cmds
 import csv
 import maya_pycmds_utils as utils
+import json
 
-channelList = ['.color']
+CHANNEL_LIST = ['color']
 
 def get_timeline_start_stop():
     start = cmds.playbackOptions(q=True, ast=True)
@@ -33,13 +34,29 @@ def export_selected_abc():
     cmds.AbcExport( j = command)
     return
 
-def create_selected_mat_dict():
+def create_selected_mat_json():
     selected = get_selected_objects_dag()
+    objDict = {}
     for obj in selected:
-        mats = utils.get_mat_on_object(s)
+        mats = utils.get_mat_on_object(obj)
+        matDict = {}
         for mat in mats:
-            for channels in channelList:
-
+            matChannelDict = {}
+            matChannelNames = []
+            for c in CHANNEL_LIST:
+                ch = str(mat)+"."+c
+                matChannelNames.append(ch)
+            matCons = cmds.listConnections(mat, c=True, p=True, d=False)
+            for i in len(matCons):
+                if not matCons[i]%0 and matCons[i] in matChannelNames:
+                    matChannelDict[matCons[i]] = ###get the file name of the filenode
+            for ch in matChannelNames:
+                if ch not in matChannelDict:
+                    val = cmds.getAttr(mat, ch)
+                    matChannelDict[ch] = val
+            matDict[mat] = matChannelDict
+        objDict[obj] = matDict
+    json.dumps(objDict)
 
 
 export_selected_abc()
