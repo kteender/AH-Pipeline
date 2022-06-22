@@ -46,13 +46,15 @@ def create_selected_mat_json():
             for c in CHANNEL_LIST:
                 ch = str(mat)+"."+c
                 matChannelNames.append(ch)
-            matCons = cmds.listConnections(mat, c=True, p=True, d=False)
+            matCons = cmds.listConnections(mat, c=True, p=False, d=False, t='file')
             for i in len(matCons):
-                if not matCons[i]%0 and matCons[i] in matChannelNames:
-                    matChannelDict[matCons[i]] = ###get the file name of the filenode
+                if i%2==0 and matCons[i] in matChannelNames:
+                    filenode = matCons[i+1]
+                    filename = cmds.getAttr(filenode+'.fileTextureName')
+                    matChannelDict[matCons[i]] = filename
             for ch in matChannelNames:
                 if ch not in matChannelDict:
-                    val = cmds.getAttr(mat, ch)
+                    val = cmds.getAttr(mat+ch)
                     matChannelDict[ch] = val
             matDict[mat] = matChannelDict
         objDict[obj] = matDict
