@@ -17,6 +17,7 @@ TEMPLATE_PATH = "D:\\_CURRENT\\AH\\pipelineTest\\demoFile_base.blend"
 OUTPUT_PATH = "D:\\_CURRENT\\AH\\outputs\\"
 
 
+
 def folder_prep():
     now = datetime.datetime.now()
     dayStr = datetime.datetime.strftime(now, "%y%m%d")
@@ -30,13 +31,19 @@ def folder_prep():
 
 def maya_exports(wd):
     """wd is a directory"""
+    #Export materials JSON
     jsonFile = "materials.json"
     jsonPath = os.path.join(wd, jsonFile)
     jsonObj = mp.create_selected_mat_json()
     with open(jsonPath, 'w') as f:
-        f.write(json.dumps(jsonObj))
-        
+        f.write(json.dumps(jsonObj, indent="\t"))
 
+    #Export the alembic cache
+    mp.export_selected_abc()
+    abcFile = "scene_cache.abc"
+    abcPath = os.path.join(wd, abcFile)
+    abcCmd = mp.create_abc_export_cmd() + abcPath
+    cmds.AbcExport( j = abcCmd)  
     return
 
 
@@ -52,6 +59,19 @@ def launch_blender(*args):
 
 
 #launch_blender('--background', TEMPLATE_PATH, '--python', 'scratchpad.py')
+
+import logging
+import maya.utils
+
+myLogger = logging.getLogger("MyLogger")
+myLogger.propagate = False
+handler = maya.utils.MayaGuiLogHandler()
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s %(message)s")
+handler.setFormatter(formatter)
+myLogger.addHandler(handler)
+
+myLogger.warning('is when this event was logged.')
 
 workingDirectory = folder_prep()
 maya_exports(workingDirectory)

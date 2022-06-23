@@ -21,3 +21,5 @@ def get_selected_objects_dag():
 def get_transform_for_shape(shape):
     tr = cmds.listRelatives(shape, type='transform', p=True)
     return tr
+
+#def get_object_full_namepath(obj):

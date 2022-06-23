@@ -4,28 +4,38 @@ import maya_pycmds_utils as utils
 import imp
 imp.reload(utils)
 import json
+import logging
 
 CHANNEL_LIST = ['color']
+ABC_EXPORT_SETTING_FLAGS = ["uvWrite", "writeFaceSets", "writeUVSets"]
+logging.DEBUG
 
 def get_selected_objects_str():
     """Returns selected object names as strings, rather than unicode strings"""
-    sel = cmds.ls(sl=True)
+    sel = cmds.ls(sl=True, l=True)
     selstr = []
     for s in sel:
         selstr.append(str(s))
     return selstr
 
-def export_selected_abc():
+def create_abc_export_cmd():
+    """Returns a string mel command for exporting Alembic cache. You'll still have to 
+    add a path to the end of the string"""
     start, stop = utils.get_timeline_start_stop()
+    settingsFlags = ""
+    for f in ABC_EXPORT_SETTING_FLAGS:
+        settingsFlags += (" -"+f)
     objectsFlag = ""
     selected = get_selected_objects_str()
-    path = "D:/_CURRENT/AH/AH_proj/cache/alembic/cube.abc"
     for s in selected:
         st = "-root |%s " % (s)
         objectsFlag += st 
-    command = "-frameRange " + str(start) + " " + str(stop) +" -dataFormat ogawa " + objectsFlag + "-file " + path
-    cmds.AbcExport( j = command)
-    return
+    command = "-frameRange " + str(start) + " " + str(stop) + settingsFlags + " -dataFormat ogawa " + objectsFlag + "-file "
+    return command
+
+
+#AbcExport -j "-frameRange 1 200 -uvWrite -writeFaceSets -writeUVSets -dataFormat ogawa -root |rig:margo_grp|rig:margo_geo_grp|rig:margo_body_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:eye_mask_grp|rig:eyeRight_geo_mask -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:eye_mask_grp|rig:eyeLeft_geo_mask -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:eyeRight_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:eyeLeft_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:noseLeft_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:mouthHighResBase -root |rig:margo_grp|rig:margo_geo_grp|rig:margo_hair_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:margo_bun_geo -root |rig:default_camera -file D:/_CURRENT/AH/AH_proj/cache/alembic/ref.abc";
+
 
 def create_selected_mat_json():
     selected = utils.get_selected_objects_dag()
@@ -54,6 +64,3 @@ def create_selected_mat_json():
         objDict[obj] = matDict
     return objDict
 
-
-
-export_selected_abc()
