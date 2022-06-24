@@ -1,4 +1,8 @@
 import maya.cmds as cmds
+import logging
+
+thisLogger = logging.getLogger("MayaPyCmdsUtilsLogger")
+thisLogger.setLevel(logging.DEBUG)
 
 def get_mat_on_object(shape):
     """should not be passed the object itself, should be passed its shape node

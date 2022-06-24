@@ -8,7 +8,10 @@ import logging
 
 CHANNEL_LIST = ['color']
 ABC_EXPORT_SETTING_FLAGS = ["uvWrite", "writeFaceSets", "writeUVSets"]
-logging.DEBUG
+
+#Set up logging for this script
+thisLogger = logging.getLogger("MayaPortionLogger")
+thisLogger.setLevel(logging.DEBUG)
 
 def get_selected_objects_str():
     """Returns selected object names as strings, rather than unicode strings"""
@@ -35,10 +38,15 @@ def create_abc_export_cmd():
 
 
 #AbcExport -j "-frameRange 1 200 -uvWrite -writeFaceSets -writeUVSets -dataFormat ogawa -root |rig:margo_grp|rig:margo_geo_grp|rig:margo_body_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:eye_mask_grp|rig:eyeRight_geo_mask -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:eye_mask_grp|rig:eyeLeft_geo_mask -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:eyeRight_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:eyeLeft_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:noseLeft_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:face_geo_grp|rig:mouthHighResBase -root |rig:margo_grp|rig:margo_geo_grp|rig:margo_hair_geo -root |rig:margo_grp|rig:margo_geo_grp|rig:margo_bun_geo -root |rig:default_camera -file D:/_CURRENT/AH/AH_proj/cache/alembic/ref.abc";
-
+def test_log():
+    thisLogger.warning("test warning")
+    thisLogger.debug("test debug")
+    thisLogger.critical("test crit")
+    return
 
 def create_selected_mat_json():
     selected = utils.get_selected_objects_dag()
+    thisLogger.info("selected is %s" % (selected))
     objDict = {}
     for shape in selected:
         mats = utils.get_mat_on_object(shape)
