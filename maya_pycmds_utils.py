@@ -26,4 +26,10 @@ def get_transform_for_shape(shape):
     tr = cmds.listRelatives(shape, type='transform', p=True)
     return tr
 
+def filter_out_orig_shapes(shapeList):
+    for shape in shapeList:
+        if shape[-4:] == "Orig":
+            shapeList.remove(shape)
+    return shapeList
+
 #def get_object_full_namepath(obj):
