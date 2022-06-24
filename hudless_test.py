@@ -19,15 +19,14 @@ BLENDER_PATH = "C:\\Program Files\\Blender Foundation\\Blender 3.1\\blender.exe"
 TEMPLATE_PATH = "D:\\_CURRENT\\AH\\pipelineTest\\demoFile_base.blend"
 OUTPUT_PATH = "D:\\_CURRENT\\AH\\outputs\\"
 
-def logging_setup():
-    """Sets up project to use Maya's GUI logger"""
-    projLogger = logging.getLogger("AHPipelineLogger")
-    projLogger.propagate = False
-    handler = maya.utils.MayaGuiLogHandler()
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter("%(asctime)s %(message)s")
-    handler.setFormatter(formatter)
-    projLogger.addHandler(handler)
+"""Sets up project to use Maya's GUI logger"""
+projLogger = logging.getLogger("AHPipelineLogger")
+projLogger.propagate = False
+handler = maya.utils.MayaGuiLogHandler()
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s %(message)s")
+handler.setFormatter(formatter)
+projLogger.addHandler(handler)
 
 def folder_prep():
     now = datetime.datetime.now()
@@ -46,8 +45,9 @@ def maya_exports(wd):
     jsonFile = "materials.json"
     jsonPath = os.path.join(wd, jsonFile)
     jsonObj = mp.create_selected_mat_json()
+    projLogger.info(jsonObj)
     with open(jsonPath, 'w') as f:
-        f.write(json.dumps(jsonObj, indent="\t"))
+        f.write(json.dumps(jsonObj, indent=4))
 
     #Export the alembic cache
     abcFile = "scene_cache.abc"
@@ -71,6 +71,6 @@ def launch_blender(*args):
 
 #myLogger.warning('is when this event was logged.')
 #mp.test_log()
-logging_setup()
+#logging_setup()
 workingDirectory = folder_prep()
 maya_exports(workingDirectory)
