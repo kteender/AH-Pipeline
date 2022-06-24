@@ -48,7 +48,8 @@ def create_selected_mat_json():
     selected = utils.get_selected_objects_dag()
     thisLogger.info("selected is %s" % (selected))
     objDict = {}
-    for shape in selected:
+    shapeList = utils.filter_out_orig_shapes(selected)
+    for shape in shapeList:
         mats = utils.get_mat_on_object(shape)
         matDict = {}
         for mat in mats:
@@ -58,6 +59,8 @@ def create_selected_mat_json():
                 ch = str(mat)+"."+c
                 matChannelNames.append(ch)
             matCons = cmds.listConnections(mat, c=True, p=False, d=False, t='file')
+            if matCons == None:
+                continue
             for i in range(0, len(matCons)):
                 if i%2==0 and matCons[i] in matChannelNames:
                     filenode = matCons[i+1]
