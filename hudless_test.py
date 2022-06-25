@@ -8,7 +8,7 @@ import datetime
 import logging
 import imp
 import json
-import maya.cmds as cmds
+import maya.cmds as mc
 import maya_portion as mp
 import maya.utils
 
@@ -41,6 +41,12 @@ def folder_prep():
 
 def maya_exports(wd):
     """wd is a directory"""
+    #Check for multiple visible cameras
+    camL = mp.get_rigged_camera_transform()
+    if len(camL) > 1:
+        projLogger.critical("More than one visible camera! Please hide cameras you don't want rendered")
+        quit()
+    
     #Export materials JSON
     jsonFile = "materials.json"
     jsonPath = os.path.join(wd, jsonFile)
@@ -53,7 +59,7 @@ def maya_exports(wd):
     abcFile = "scene_cache.abc"
     abcPath = os.path.join(wd, abcFile)
     abcCmd = mp.create_abc_export_cmd() + abcPath
-    cmds.AbcExport( j = abcCmd)  
+    mc.AbcExport( j = abcCmd)  
     return
 
 def launch_blender(*args):
