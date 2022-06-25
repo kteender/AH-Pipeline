@@ -47,10 +47,12 @@ def test_log():
 def create_selected_mat_json():
     selected = utils.get_selected_objects_dag()
     thisLogger.info("selected is %s" % (selected))
-    objDict = {}
+    shapeDict = {}
+    #Tries to get rid of 'Orig' shape nodes in the list
     shapeList = utils.filter_out_orig_shapes(selected)
     for shape in shapeList:
         mats = utils.get_mat_on_object(shape)
+        thisLogger.info("material on %s is %s" % (shape, mats))
         matDict = {}
         for mat in mats:
             matChannelDict = {}
@@ -60,18 +62,20 @@ def create_selected_mat_json():
                 matChannelNames.append(ch)
             matCons = cmds.listConnections(mat, c=True, p=False, d=False, t='file')
             if matCons == None:
-                continue
-            for i in range(0, len(matCons)):
-                if i%2==0 and matCons[i] in matChannelNames:
-                    filenode = matCons[i+1]
-                    filename = cmds.getAttr(filenode+'.fileTextureName')
-                    matChannelDict[matCons[i]] = filename
+                thisLogger.info("%s material node has no connections" % (mat))
+            else:
+                for i in range(0, len(matCons)):
+                    if i%2==0 and matCons[i] in matChannelNames:
+                        filenode = matCons[i+1]
+                        filename = cmds.getAttr(filenode+'.fileTextureName')
+                        matChannelDict[matCons[i]] = filename
             for ch in matChannelNames:
                 if ch not in matChannelDict:
-                    val = cmds.getAttr(mat+ch)
+                    thisLogger.info("%s has no texture input, using default RBG" % (ch))
+                    val = cmds.getAttr(ch)
                     matChannelDict[ch] = val
             matDict[mat] = matChannelDict
-        obj = utils.get_transform_for_shape(shape)[0] 
-        objDict[obj] = matDict
-    return objDict
+        #obj = utils.get_transform_for_shape(shape)[0]
+        shapeDict[shape] = matDict
+    return shapeDict
 

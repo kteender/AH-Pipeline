@@ -28,7 +28,7 @@ def get_transform_for_shape(shape):
 
 def filter_out_orig_shapes(shapeList):
     for shape in shapeList:
-        if shape[-4:] == "Orig":
+        if shape[-4:] == "Orig" or shape[-5:-1] == "Orig":
             shapeList.remove(shape)
     return shapeList
 
