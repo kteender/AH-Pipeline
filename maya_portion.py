@@ -1,4 +1,5 @@
-import maya.cmds as cmds
+from ctypes import util
+import maya.cmds as mc
 import csv
 import maya_pycmds_utils as utils
 import imp
@@ -7,18 +8,33 @@ import json
 import logging
 
 CHANNEL_LIST = ['color']
-ABC_EXPORT_SETTING_FLAGS = ["uvWrite", "writeFaceSets", "writeUVSets"]
+ABC_EXPORT_SETTING_FLAGS = ["uvWrite", "writeFaceSets", "writeUVSets", "worldSpace"]
 
 #Set up logging for this script
 thisLogger = logging.getLogger("MayaPortionLogger")
 thisLogger.setLevel(logging.DEBUG)
 
+def get_rigged_camera_transform():
+    cs = mc.ls(ca=True, v=True)
+    cams = []
+    for c in cs:
+        ct = utils.get_transform_for_shape(c)
+        cams += ct
+    thisLogger.debug("cams are %s" % (cams))
+    return cams
+
 def get_selected_objects_str():
     """Returns selected object names as strings, rather than unicode strings"""
-    sel = cmds.ls(sl=True, l=True)
+    sel = mc.ls(sl=True, l=True)
+    cam = get_rigged_camera_transform()
+    #Only need to check cam[0] because runner script will exit if multiple visible cams
+    if ("|"+cam[0]) not in sel:
+        sel += cam
+    thisLogger.info("sel is %s" % (sel))
     selstr = []
     for s in sel:
         selstr.append(str(s))
+    thisLogger.info("cmd arg is %s" % (selstr))
     return selstr
 
 def create_abc_export_cmd():
@@ -60,19 +76,19 @@ def create_selected_mat_json():
             for c in CHANNEL_LIST:
                 ch = str(mat)+"."+c
                 matChannelNames.append(ch)
-            matCons = cmds.listConnections(mat, c=True, p=False, d=False, t='file')
+            matCons = mc.listConnections(mat, c=True, p=False, d=False, t='file')
             if matCons == None:
                 thisLogger.info("%s material node has no connections" % (mat))
             else:
                 for i in range(0, len(matCons)):
                     if i%2==0 and matCons[i] in matChannelNames:
                         filenode = matCons[i+1]
-                        filename = cmds.getAttr(filenode+'.fileTextureName')
+                        filename = mc.getAttr(filenode+'.fileTextureName')
                         matChannelDict[matCons[i]] = filename
             for ch in matChannelNames:
                 if ch not in matChannelDict:
                     thisLogger.info("%s has no texture input, using default RBG" % (ch))
-                    val = cmds.getAttr(ch)
+                    val = mc.getAttr(ch)
                     matChannelDict[ch] = val
             matDict[mat] = matChannelDict
         #obj = utils.get_transform_for_shape(shape)[0]
