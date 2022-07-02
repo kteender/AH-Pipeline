@@ -1,9 +1,12 @@
 import sys
+
+#from scratchpad import TEMPLATE_PATH
 MODULE_PATH = "D:\\_CURRENT\\AH\\AH_pipeline"
 sys.path.append(MODULE_PATH)
 
 import os
 import subprocess
+import shlex
 import datetime
 import logging
 import imp
@@ -16,8 +19,10 @@ imp.reload(mp)
 
 BLENDER_PATH = "C:\\Program Files\\Blender Foundation\\Blender 3.1\\blender.exe"
 #TEMPLATE_PATH = "D:\\_CURRENT\\AH\\pipelineTest\\renderingTestScene12_fullRigTestImageComposite.blend"
-TEMPLATE_PATH = "D:\\_CURRENT\\AH\\pipelineTest\\demoFile_base.blend"
+#TEMPLATE_PATH = "D:\\_CURRENT\\AH\\pipelineTest\\demoFile_base.blend"
+TEMPLATE_PATH = "D:\\_CURRENT\\AH\\AH_pipeline\\_template.blend"
 OUTPUT_PATH = "D:\\_CURRENT\\AH\\outputs\\"
+SCRIPTS_PATH = "D:\\_CURRENT\\AH\\AH_pipeline\\"
 
 """Sets up project to use Maya's GUI logger"""
 projLogger = logging.getLogger("AHPipelineLogger")
@@ -40,7 +45,7 @@ def folder_prep():
     return(nowDir)
 
 def maya_exports(wd):
-    """wd is a directory"""
+    """wd is a directory. Returns the files for the materials and the abc cache"""
     #Check for multiple visible cameras
     camL = mp.get_rigged_camera_transform()
     if len(camL) > 1:
@@ -60,23 +65,37 @@ def maya_exports(wd):
     abcPath = os.path.join(wd, abcFile)
     abcCmd = mp.create_abc_export_cmd() + abcPath
     mc.AbcExport( j = abcCmd)  
-    return
+    return jsonPath, abcPath
+
 
 def launch_blender(*args):
     #pass in flags as str
     blender = BLENDER_PATH
-    extension = ""
-    for k in args:
-        extension += (" %s" % (k))
-    sp = blender + extension
-    subprocess.run(sp)
-    print(sp)
+    if sys.version_info[0] >= 3:
+        extension = ""
+        for a in args:
+            extension += (" %s" % (a))
+        sp3 = blender + extension
+        subprocess.run(sp3)
+    else:
+        sp2 = [BLENDER_PATH]
+        for a in args:
+            sp2.append(a)
+        print(sp2)
+        #subprocess.Popen([BLENDER_PATH, TEMPLATE_PATH, '--python', 'blender_potion.py'])
+        subprocess.Popen(sp2)
 
+    #print(sp)
 
+#C:\Program Files\Blender Foundation\Blender 3.1\blender.exe --background D:\_CURRENT\AH\pipelineTest\demoFile_base.blend --python blender_portion.py -- -p1 D:\_CURRENT\AH\outputs\220626\114133\materials.json -p2 D:\_CURRENT\AH\outputs\220626\114133\scene_cache.abc
 #launch_blender('--background', TEMPLATE_PATH, '--python', 'scratchpad.py')
 
 #myLogger.warning('is when this event was logged.')
 #mp.test_log()
 #logging_setup()
 workingDirectory = folder_prep()
-maya_exports(workingDirectory)
+materialsPath, alembicPath = maya_exports(workingDirectory)
+var1 = materialsPath
+var2 = alembicPath
+launch_blender('--background', TEMPLATE_PATH, '--debug-all', '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
+#launch_blender(TEMPLATE_PATH, '--debug-all', '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
