@@ -6,7 +6,8 @@ import json
 import imp
 
 import bpy
-import bpy.py.utils as utils
+sys.path.append("D:\\_CURRENT\\AH\\AH_pipeline\\")
+import blender_py_utils as utils
 
 imp.reload(utils)
 
@@ -18,6 +19,8 @@ NOHIGHLIGHT_NAMES = ["rig:mouthHighResBase","rig:margo_body_geo"]
 EYE_NAMES = ['rig:eyeLeft_geo', 'rig:eyeRight_geo']
 EYEMASK_NAMES = ["rig:eyeLeft_geo_mask", "rig:eyeRight_geo_mask"]
 FACE_NAMES = ["rig:mouthHighResBase", "rig:noseLeft_geo"]
+
+CHANNEL_LIST = ['color']
 
 rigObjs = {0:HIGHLIGHT_NAMES, 1:NOHIGHLIGHT_NAMES, 2:EYEMASK_NAMES, 3:EYE_NAMES,
 4:FACE_NAMES}
@@ -95,7 +98,10 @@ def apply_materials(path):
                 m = bpy.data.materials[mat]
             except:
                 thisLogger.info("Creating Material for %s" % mat)
-                m = utils.create_material_from_dict(matData[obj][mat])
+                print("mat is")
+                print(type(mat))
+                print(mat)
+                m = utils.create_material_from_dict(mat, matData[obj][mat], *CHANNEL_LIST)
             utils.apply_material_to_object(obj, m)
             
 
@@ -107,6 +113,7 @@ print("path1 is ", p1)
 print("path2 is ", p2)
 import_abc(p2)
 sort_objects()
+apply_materials(p1)
 
 """
 Collections: 
