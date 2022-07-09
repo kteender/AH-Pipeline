@@ -89,9 +89,10 @@ def create_selected_mat_json():
                 if ch not in matChannelDict:
                     thisLogger.info("%s has no texture input, using default RBG" % (ch))
                     val = mc.getAttr(ch)
-                    matChannelDict[ch] = val
+                    matChannelDict[ch] = val[0]
             matDict[mat] = matChannelDict
         #obj = utils.get_transform_for_shape(shape)[0]
-        shapeDict[shape] = matDict
+        tr = utils.get_transform_for_shape(shape)[0]
+        shapeDict[tr] = matDict
     return shapeDict
 
