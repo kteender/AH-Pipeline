@@ -66,6 +66,7 @@ def create_selected_mat_json():
     shapeDict = {}
     #Tries to get rid of 'Orig' shape nodes in the list
     shapeList = utils.filter_out_orig_shapes(selected)
+    shapeList = utils.filter_out_poly_shapes(shapeList)
     for shape in shapeList:
         mats = utils.get_mat_on_object(shape)
         thisLogger.info("material on %s is %s" % (shape, mats))
@@ -89,10 +90,13 @@ def create_selected_mat_json():
                 if ch not in matChannelDict:
                     thisLogger.info("%s has no texture input, using default RBG" % (ch))
                     val = mc.getAttr(ch)
+                    thisLogger.info("ch is %s val is %s "% (ch,val))
                     matChannelDict[ch] = val[0]
             matDict[mat] = matChannelDict
         #obj = utils.get_transform_for_shape(shape)[0]
-        tr = utils.get_transform_for_shape(shape)[0]
-        shapeDict[tr] = matDict
+        #tr = utils.get_transform_for_shape(shape)[0]
+        shapeDict[shape] = matDict
+        
+        thisLogger.info(shapeDict)
     return shapeDict
 
