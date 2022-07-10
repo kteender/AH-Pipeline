@@ -14,9 +14,7 @@ import json
 import maya.cmds as mc
 import maya_portion as mp
 import maya.utils
-
 imp.reload(mp)
-
 BLENDER_PATH = "C:\\Program Files\\Blender Foundation\\Blender 3.1\\blender.exe"
 #TEMPLATE_PATH = "D:\\_CURRENT\\AH\\pipelineTest\\renderingTestScene12_fullRigTestImageComposite.blend"
 #TEMPLATE_PATH = "D:\\_CURRENT\\AH\\pipelineTest\\demoFile_base.blend"
@@ -98,4 +96,4 @@ materialsPath, alembicPath = maya_exports(workingDirectory)
 var1 = materialsPath
 var2 = alembicPath
 launch_blender('--background', TEMPLATE_PATH, '--debug-all', '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
-#launch_blender(TEMPLATE_PATH, '--debug-all', '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
+#launch_blender(TEMPLATE_PATH, '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
