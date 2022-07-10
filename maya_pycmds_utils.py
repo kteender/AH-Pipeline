@@ -32,3 +32,9 @@ def filter_out_orig_shapes(shapeList):
             shapeList.remove(shape)
     return shapeList
 
+def filter_out_poly_shapes(shapeList):
+    for shape in shapeList:
+        if "polyS" in shape:
+            shapeList.remove(shape)
+    return shapeList
+
