@@ -110,6 +110,7 @@ def create_material_from_dict(nm, d, *args):
     print("d is")
     print(d)
     thisLogger.critical("testing")
+    thisLogger.info("testing92")
     mat = bpy.data.materials.new(nm)
     mat.use_nodes = True
     nt = mat.node_tree
@@ -121,12 +122,9 @@ def create_material_from_dict(nm, d, *args):
     mat.node_tree.links.new(shN.outputs['BSDF'], moN.inputs['Surface'])
 
     for a in args:
-        print("arg is %s" % a)
         if a  == 'color':
             k = nm+ ".color"
             col = d[k]
-            print("col is")
-            print(col)
             if isinstance(col, str):
                 size = (1000,1000)
                 with Image.open(col) as im:
@@ -139,8 +137,9 @@ def create_material_from_dict(nm, d, *args):
                 txN.image = txI
                 mat.node_tree.links.new(txN.outputs['Color'], shN.inputs['Color'])
             else:
-                bcol = mathutils.Color(col)
-                shN.color = bcol
+                thisLogger.info("The else")
+                col.append(1.0)
+                shN.inputs['Color'].default_value = col
     return 
 
 def apply_materials(path):
