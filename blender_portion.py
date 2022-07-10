@@ -107,10 +107,6 @@ def sort_objects():
                 continue
 
 def create_material_from_dict(nm, d, *args):
-    print("d is")
-    print(d)
-    thisLogger.critical("testing")
-    thisLogger.info("testing92")
     mat = bpy.data.materials.new(nm)
     mat.use_nodes = True
     nt = mat.node_tree
@@ -137,36 +133,39 @@ def create_material_from_dict(nm, d, *args):
                 txN.image = txI
                 mat.node_tree.links.new(txN.outputs['Color'], shN.inputs['Color'])
             else:
-                thisLogger.info("The else")
                 col.append(1.0)
                 shN.inputs['Color'].default_value = col
-    return 
+    return mat
 
 def apply_materials(path):
     f = open(path)
     matData = json.load(f)
     for obj in matData:
+        objMats = []
+        thisLogger.info("obj is %s" % (obj))
         for mat in matData[obj]:
             m = None
             try:
                 m = bpy.data.materials[mat]
+                objMats.append(m)
             except:
                 thisLogger.info("Creating Material for %s" % mat)
-                print("mat is")
-                print(type(mat))
-                print(mat)
                 m = create_material_from_dict(mat, matData[obj][mat], *CHANNEL_LIST)
-            tr = obj.replace("Shape", "")
-            if tr in bpy.data.objects:
-                utils.apply_material_to_object(bpy.data.objects[tr], m)
-            
-
-
-    
+                objMats.append(m)
+        tr = obj.replace("Shape", "")
+        thisLogger.info("tr for %s is %s" % (obj, tr))
+        thisLogger.info("mat list is %s" % objMats)
+        if tr in bpy.data.objects:
+            thisLogger.info("%s in object list" % tr)
+            if len(objMats) in range(0,2):
+                utils.apply_material_to_object(bpy.data.objects[tr], objMats[0])
+            else:
+                thisLogger.warning("Multiple materials found on %s. This pipeline supports 1 material per object. Found materials:" % tr)
+                for mat in objMats:
+                    thisLogger.warning(mat)
+               
 
 p1, p2 = get_args()
-print("path1 is ", p1)
-print("path2 is ", p2)
 import_abc(p2)
 sort_objects()
 apply_materials(p1)
