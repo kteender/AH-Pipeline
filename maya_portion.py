@@ -100,3 +100,14 @@ def create_selected_mat_json():
         thisLogger.info(shapeDict)
     return shapeDict
 
+def create_selected_light_dict():
+    ml = utils.get_mesh_light_shapes()
+    lightTrs = []
+    for l in ml:
+        midTr = mc.listRelatives(l, type='transform', p=True)
+        topTr = mc.listRelatives(midTr, p=True)
+        exp = l + '.aiExposure'
+        expA = mc.getAttr(exp)
+        lightTrs.append(topTr)
+    return
+
