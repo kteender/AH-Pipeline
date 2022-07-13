@@ -38,3 +38,7 @@ def filter_out_poly_shapes(shapeList):
             shapeList.remove(shape)
     return shapeList
 
+def get_mesh_light_shapes():
+    dag = mc.ls(dag=True, type='aiMeshLight')
+    return dag
+
