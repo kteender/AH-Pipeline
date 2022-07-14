@@ -60,7 +60,7 @@ def test_log():
     thisLogger.critical("test crit")
     return
 
-def create_selected_mat_json():
+def create_selected_mat_dict():
     selected = utils.get_selected_objects_dag()
     thisLogger.info("selected is %s" % (selected))
     shapeDict = {}
@@ -102,12 +102,29 @@ def create_selected_mat_json():
 
 def create_selected_light_dict():
     ml = utils.get_mesh_light_shapes()
-    lightTrs = []
+    lightDict = {}
     for l in ml:
-        midTr = mc.listRelatives(l, type='transform', p=True)
-        topTr = mc.listRelatives(midTr, p=True)
+        attrDict = {}
+        midTr = mc.listRelatives(l, type='transform', p=True)[0]
+        topTr = mc.listRelatives(midTr, p=True)[0]
+
+        col = l + ".color"
+        colA = mc.getAttr(col)
+
         exp = l + '.aiExposure'
         expA = mc.getAttr(exp)
-        lightTrs.append(topTr)
-    return
+
+        shad = l + '.aiCastShadows'
+        shadA = mc.getAttr(shad)
+
+        shadCol = l + ".aiShadowColor"
+        shadColA = mc.getAttr(shadCol)
+
+        attrDict[exp] = expA
+        attrDict[col] = colA[0]
+        attrDict[shad] = shadA
+        attrDict[shadCol] = shadColA[0]
+
+        lightDict[topTr] = attrDict
+    return lightDict
 

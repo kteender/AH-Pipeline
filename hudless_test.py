@@ -51,19 +51,27 @@ def maya_exports(wd):
         quit()
     
     #Export materials JSON
-    jsonFile = "materials.json"
-    jsonPath = os.path.join(wd, jsonFile)
-    jsonObj = mp.create_selected_mat_json()
-    projLogger.info(jsonObj)
-    with open(jsonPath, 'w') as f:
-        f.write(json.dumps(jsonObj, indent=4))
+    jsonFile01 = "materials.json"
+    jsonPath01 = os.path.join(wd, jsonFile01)
+    jsonObj01 = mp.create_selected_mat_dict()
+    projLogger.info(jsonObj01)
+    with open(jsonPath01, 'w') as f:
+        f.write(json.dumps(jsonObj01, indent=4))
+    
+    #Export lights JSON
+    jsonFile02 = "lights.json"
+    jsonPath02 = os.path.join(wd, jsonFile02)
+    jsonObj02 = mp.create_selected_light_dict()
+    projLogger.info(jsonObj02)
+    with open(jsonPath02, 'w') as f:
+        f.write(json.dumps(jsonObj02, indent=4))
 
     #Export the alembic cache
     abcFile = "scene_cache.abc"
     abcPath = os.path.join(wd, abcFile)
     abcCmd = mp.create_abc_export_cmd() + abcPath
     mc.AbcExport( j = abcCmd)  
-    return jsonPath, abcPath
+    return jsonPath01, abcPath
 
 
 def launch_blender(*args):
@@ -95,5 +103,5 @@ workingDirectory = folder_prep()
 materialsPath, alembicPath = maya_exports(workingDirectory)
 var1 = materialsPath
 var2 = alembicPath
-launch_blender('--background', TEMPLATE_PATH, '--debug-all', '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
-#launch_blender(TEMPLATE_PATH, '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
+#launch_blender('--background', TEMPLATE_PATH, '--debug', '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
+launch_blender(TEMPLATE_PATH, '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)

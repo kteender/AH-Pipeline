@@ -51,6 +51,7 @@ def get_args():
         #parser.add_argument('-s1', '--sample_1', dest='sample_1', metavar='FILE')
         parser.add_argument('-p1', '--path1', dest='path1', type=str)
         parser.add_argument('-p2', '--path2', dest='path2', type=str)
+        parser.add_argument('-p3', '--path3', dest='path3', type=str)
         args = parser.parse_known_args(argv)[0]
         # print parameters
         thisLogger.info('path_1: ', args.path1)
@@ -163,12 +164,29 @@ def apply_materials(path):
                 thisLogger.warning("Multiple materials found on %s. This pipeline supports 1 material per object. Found materials:" % tr)
                 for mat in objMats:
                     thisLogger.warning(mat)
+    
+def set_up_lights(path):
+    return
                
 
-p1, p2 = get_args()
-import_abc(p2)
+p1, p2, p3 = get_args()
+import_abc(p3)
 sort_objects()
 apply_materials(p1)
+set_up_lights(p2)
+for obj in bpy.data.objects:
+    utils.add_subd(obj)
+camCol = bpy.data.collections['cameras']
+if len(camCol.objects) < 1:
+    thisLogger.critical("No camera found in %s" % camCol)
+elif len(camCol.objects) > 1:
+    thisLogger.critical("Mutliple cameras found in %s:" % camCol)
+    for obj in camCol.objects:
+        thisLogger.info(obj)
+else:
+    cam = camCol.objects[0]
+    bpy.context.scene.camera = cam
+
 
 """
 Collections: 
