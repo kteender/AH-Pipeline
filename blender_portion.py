@@ -39,6 +39,11 @@ EYEMASK_NAMES = ["rig:eyeLeft_geo_mask", "rig:eyeRight_geo_mask"]
 FACE_NAMES = ["rig:mouth_geo", "rig:noseLeft_geo"]
 
 CHANNEL_LIST = ['color']
+CHANNEL_MAP = {
+    'Color':'.color',
+    'Strength':'.aiExposure',
+    
+}
 
 rigObjs = {0:HIGHLIGHT_NAMES, 1:NOHIGHLIGHT_NAMES, 2:EYEMASK_NAMES, 3:EYE_NAMES,
 4:FACE_NAMES}
@@ -164,12 +169,52 @@ def apply_materials(path):
                 thisLogger.warning("Multiple materials found on %s. This pipeline supports 1 material per object. Found materials:" % tr)
                 for mat in objMats:
                     thisLogger.warning(mat)
+
+"""
+def create_light_from_dict(nm, d, *args):
+    mat = bpy.data.materials.new(nm)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nt.nodes.remove(nt.nodes['Material Output'])
+    nt.nodes.remove(nt.nodes['Principled BSDF'])
+    mat.node_tree.links.clear()
+    moN = nt.nodes.new('ShaderNodeOutputMaterial')
+    emN = nt.nodes.new('ShaderNodeEmission')
+    mat.node_tree.links.new(emN.outputs['Emission'], moN.inputs['Surface'])
     
+    for a in args:
+        if a == ""
+"""
+
 def set_up_lights(path):
+    f = open(path)
+    lightData = json.load(f)
+    for obj in lightData:
+        meshLightCounter = 0
+        meshLights = []
+        if lightData[obj]['lightType'] == 'mesh':
+            meshLightCounter += 1
+            mat = bpy.data.materials['light_mat']
+            meshLight, grp = utils.create_node_group_in_mat(mat, obj.name)
+            meshLights.append(grp)
+
+            emN1 = meshLight.nodes.new('ShaderNodeEmission')
+            emN2 = meshLight.nodes.new('ShaderNodeEmission')
+            ngoN = meshLight.nodes.new('NodeGroupOutput')
+            objN = meshLight.nodes.new('ShaderNodeObjectInfo')
+            matN = meshLight.nodes.new('ShaderNodeMath')
+            mixN = meshLight.nodes.new('ShaderNodeMixShader')
+            pthN = meshLight.nodes.new('ShaderNodeLightPath')
+
+            bpy.data.materials['Material'].node_tree.nodes['Math'].operation = 'COMPARE'
+            
+
+            
     return
                
 
 p1, p2, p3 = get_args()
+bpy.context.scene.render.engine = 'CYCLES'
 import_abc(p3)
 sort_objects()
 apply_materials(p1)
