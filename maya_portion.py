@@ -114,15 +114,18 @@ def create_selected_light_dict():
         exp = l + '.aiExposure'
         expA = mc.getAttr(exp)
 
+        """
         shad = l + '.aiCastShadows'
         shadA = mc.getAttr(shad)
+        """
 
         shadCol = l + ".aiShadowColor"
         shadColA = mc.getAttr(shadCol)
 
+        attrDict['lightType'] = 'mesh'
         attrDict[exp] = expA
         attrDict[col] = colA[0]
-        attrDict[shad] = shadA
+        #attrDict[shad] = shadA
         attrDict[shadCol] = shadColA[0]
 
         lightDict[topTr] = attrDict
