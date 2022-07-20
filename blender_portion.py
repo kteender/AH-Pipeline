@@ -3,6 +3,8 @@ import argparse
 import logging
 import json
 import imp
+
+from pkg_resources import empty_provider
 import mathutils
 import subprocess
 import os
@@ -38,12 +40,14 @@ EYE_NAMES = ['rig:eyeLeft_geo', 'rig:eyeRight_geo']
 EYEMASK_NAMES = ["rig:eyeLeft_geo_mask", "rig:eyeRight_geo_mask"]
 FACE_NAMES = ["rig:mouth_geo", "rig:noseLeft_geo"]
 
-CHANNEL_LIST = ['color']
+MAT_CHANNEL_LIST = ['color']
+LIGHT_CHANNEL_LIST = ['color', 'aiShadowColor', 'aiExposure']
 CHANNEL_MAP = {
-    'Color':'.color',
-    'Strength':'.aiExposure',
-    
+    'color':'Color',
+    'aiShadowColor':'Color',
+    'aiExposure':'Strength',
 }
+
 
 rigObjs = {0:HIGHLIGHT_NAMES, 1:NOHIGHLIGHT_NAMES, 2:EYEMASK_NAMES, 3:EYE_NAMES,
 4:FACE_NAMES}
@@ -61,7 +65,8 @@ def get_args():
         # print parameters
         thisLogger.info('path_1: ', args.path1)
         thisLogger.info('path_2: ', args.path2)
-        return args.path1, args.path2
+        thisLogger.info('path_3: ', args.path3)
+        return args.path1, args.path2, args.path3
 
 def import_abc(abcPath):
     bpy.ops.wm.alembic_import(filepath=abcPath)
@@ -156,12 +161,12 @@ def apply_materials(path):
                 objMats.append(m)
             except:
                 thisLogger.info("Creating Material for %s" % mat)
-                m = create_material_from_dict(mat, matData[obj][mat], *CHANNEL_LIST)
+                m = create_material_from_dict(mat, matData[obj][mat], *MAT_CHANNEL_LIST)
                 objMats.append(m)
         tr = obj.replace("Shape", "")
         thisLogger.info("tr for %s is %s" % (obj, tr))
         thisLogger.info("mat list is %s" % objMats)
-        if tr in bpy.data.objects:
+        if tr in bpy.data.objects and bpy.data.objects[tr].type == 'MESH':
             thisLogger.info("%s in object list" % tr)
             if len(objMats) in range(0,2):
                 utils.apply_material_to_object(bpy.data.objects[tr], objMats[0])
@@ -192,24 +197,65 @@ def set_up_lights(path):
     for obj in lightData:
         meshLightCounter = 0
         meshLights = []
+        mat = bpy.data.materials['light_mat']
         if lightData[obj]['lightType'] == 'mesh':
-            meshLightCounter += 1
-            mat = bpy.data.materials['light_mat']
-            meshLight, grp = utils.create_node_group_in_mat(mat, obj.name)
+            meshLight, grp = utils.create_node_group_in_mat(mat, obj)
             meshLights.append(grp)
 
             emN1 = meshLight.nodes.new('ShaderNodeEmission')
             emN2 = meshLight.nodes.new('ShaderNodeEmission')
             ngoN = meshLight.nodes.new('NodeGroupOutput')
-            objN = meshLight.nodes.new('ShaderNodeObjectInfo')
-            matN = meshLight.nodes.new('ShaderNodeMath')
+            mthN = meshLight.nodes.new('ShaderNodeMath')
             mixN = meshLight.nodes.new('ShaderNodeMixShader')
             pthN = meshLight.nodes.new('ShaderNodeLightPath')
 
-            bpy.data.materials['Material'].node_tree.nodes['Math'].operation = 'COMPARE'
-            
+            for c in LIGHT_CHANNEL_LIST:
+                lSh = bpy.data.objects[obj].children[0].name+"Shape"
+                k = str(lSh+"."+c)
+                if c == 'color':
+                    col1 = lightData[obj][k]
+                    col1.append(1.0)
+                    emN1.inputs['Color'].default_value = col1
+                    continue
+                if c == 'aiShadowColor':
+                    col2 =  lightData[obj][k]
+                    col2.append(1.0)
+                    emN2.inputs['Color'].default_value = col2
+                    continue
+                if c == 'aiExposure':
+                    exp = lightData[obj][k]
+                    emN1.inputs['Strength'].default_value = exp
+                    emN2.inputs['Strength'].default_value = exp
+                    continue
 
+            mthN.operation = 'GREATER_THAN'
+
+            meshLight.links.new(pthN.outputs['Ray Depth'], mthN.inputs['Value'])
+            meshLight.links.new(mthN.outputs['Value'], mixN.inputs['Fac'])
+            meshLight.links.new(emN1.outputs['Emission'], mixN.inputs[2])
+            meshLight.links.new(emN2.outputs['Emission'], mixN.inputs[1])
+            meshLight.links.new(mixN.outputs['Shader'], ngoN.inputs[0])
             
+            moNm = mat.node_tree.nodes['Material Output']
+            rmL = [l for l in mat.node_tree.links if l.to_node == moNm][0]
+            shOld = rmL.from_node
+            mat.node_tree.links.remove(rmL)
+            objNm = mat.node_tree.nodes.new('ShaderNodeObjectInfo')
+            mthNm = mat.node_tree.nodes.new('ShaderNodeMath')
+            mixNm = mat.node_tree.nodes.new('ShaderNodeMixShader')
+
+            mthNm.operation = 'GREATER_THAN'
+            mthNm.inputs[2].default_value = meshLightCounter
+
+            mat.node_tree.links.new(objNm.outputs['Object Index'], mthNm.inputs['Value'])
+            mat.node_tree.links.new(mthNm.outputs['Value'], mixNm.inputs['Fac'])
+            mat.node_tree.links.new(shOld.outputs[0], mixNm.inputs[1])
+            mat.node_tree.links.new(grp.outputs[0], mixNm.inputs[2])
+            mat.node_tree.links.new(mixNm.outputs[0], moNm.inputs['Surface'])
+
+            meshLightCounter += 1
+            bpy.data.objects[obj].pass_index = meshLightCounter
+            bpy.data.objects[obj].visible_camera = False          
     return
                
 
@@ -220,7 +266,8 @@ sort_objects()
 apply_materials(p1)
 set_up_lights(p2)
 for obj in bpy.data.objects:
-    utils.add_subd(obj)
+    if obj.name in HIGHLIGHT_NAMES or obj.name in NOHIGHLIGHT_NAMES or obj.name in FACE_NAMES:
+        utils.add_subd(obj)
 camCol = bpy.data.collections['cameras']
 if len(camCol.objects) < 1:
     thisLogger.critical("No camera found in %s" % camCol)
