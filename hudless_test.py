@@ -71,7 +71,7 @@ def maya_exports(wd):
     abcPath = os.path.join(wd, abcFile)
     abcCmd = mp.create_abc_export_cmd() + abcPath
     mc.AbcExport( j = abcCmd)  
-    return jsonPath01, abcPath
+    return jsonPath01, jsonPath02, abcPath
 
 
 def launch_blender(*args):
@@ -100,8 +100,9 @@ def launch_blender(*args):
 #mp.test_log()
 #logging_setup()
 workingDirectory = folder_prep()
-materialsPath, alembicPath = maya_exports(workingDirectory)
+materialsPath, lightsPath, alembicPath = maya_exports(workingDirectory)
 var1 = materialsPath
-var2 = alembicPath
-#launch_blender('--background', TEMPLATE_PATH, '--debug', '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
-launch_blender(TEMPLATE_PATH, '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2)
+var2 = lightsPath
+var3 = alembicPath
+#launch_blender('--background', TEMPLATE_PATH, '--debug', '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2, '-p3', var3)
+launch_blender(TEMPLATE_PATH, '--python', os.path.join(SCRIPTS_PATH,'blender_portion.py'), '--', '-p1', var1, '-p2', var2, '-p3', var3)
