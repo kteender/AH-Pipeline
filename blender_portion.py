@@ -107,6 +107,11 @@ def sort_objects():
                 cols['cameras'].objects.link(obj)
                 cc.objects.unlink(obj)
             continue
+        if "highlight" in p2.name.lower():
+            if cc != cols['highlight_lights']:
+                cols['highlight_lights'].objects.link(obj)
+                cc.objects.unlink(obj)
+            continue
         for k in rigObjs.keys():
             if p2.name in rigObjs[k]:
                 col = sceneCollections[k]
