@@ -113,9 +113,11 @@ def sort_objects():
                 cc.objects.unlink(obj)
             continue
         for k in rigObjs.keys():
+            thisLogger.info("Current collection is %s" % cc)
             if p2.name in rigObjs[k]:
                 col = sceneCollections[k]
-                if cc != col:
+                thisLogger.info("New collection is %s" % col)
+                if cc != cols[col]:
                     cols[col].objects.link(obj)
                     cc.objects.unlink(obj)
                 break
@@ -196,13 +198,11 @@ def create_light_from_dict(nm, d, *args):
         if a == ""
 """
 
-def set_up_lights(path):
-    f = open(path)
-    lightData = json.load(f)
+def set_up_lights(lightData, matName):
+    mat = bpy.data.materials[matName]
     for obj in lightData:
         meshLightCounter = 0
         meshLights = []
-        mat = bpy.data.materials['light_mat']
         if lightData[obj]['lightType'] == 'mesh':
             meshLight, grp = utils.create_node_group_in_mat(mat, obj)
             meshLights.append(grp)
@@ -269,7 +269,10 @@ bpy.context.scene.render.engine = 'CYCLES'
 import_abc(p3)
 sort_objects()
 apply_materials(p1)
-set_up_lights(p2)
+f = open(p2)
+lightData = json.load(f)
+set_up_lights(lightData, 'light_mat')
+set_up_lights(lightData, 'black_mat')
 for obj in bpy.data.objects:
     if obj.name in HIGHLIGHT_NAMES or obj.name in NOHIGHLIGHT_NAMES or obj.name in FACE_NAMES:
         utils.add_subd(obj)
