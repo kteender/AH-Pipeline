@@ -38,7 +38,7 @@ def create_node_group_in_mat(mat, nm):
 def copy_transforms(obj, target, maintainOffset):
     cp = obj.constraints.new('COPY_TRANSFORMS')
     cp.target = target
-    
+
     if maintainOffset:
         cp.mix_mode = 'BEFORE_FULL'
         cp.target_space = 'LOCAL'
@@ -47,3 +47,4 @@ def copy_transforms(obj, target, maintainOffset):
         cp.mix_mode = 'REPLACE'
         cp.target_space = 'WORLD'
         cp.owner_space = 'WORLD'
+    return
