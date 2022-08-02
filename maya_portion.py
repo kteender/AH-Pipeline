@@ -1,4 +1,3 @@
-from ctypes import util
 import maya.cmds as mc
 import csv
 import maya_pycmds_utils as utils
@@ -102,11 +101,15 @@ def create_selected_mat_dict():
 
 def create_selected_light_dict():
     ml = utils.get_mesh_light_shapes()
+    pl = utils.get_point_light_shapes()
+    lights = ml+pl
     lightDict = {}
-    for l in ml:
+    for l in lights:
         attrDict = {}
         midTr = mc.listRelatives(l, type='transform', p=True)[0]
         topTr = mc.listRelatives(midTr, p=True)[0]
+
+        nm = l.replace('Shape', '')
 
         col = l + ".color"
         colA = mc.getAttr(col)
@@ -114,18 +117,28 @@ def create_selected_light_dict():
         exp = l + '.aiExposure'
         expA = mc.getAttr(exp)
 
-        """
-        shad = l + '.aiCastShadows'
-        shadA = mc.getAttr(shad)
-        """
+        if l in ml:
+            shad = l + '.aiCastShadows'
+            shadA = mc.getAttr(shad)
+            shadCol = l + ".aiShadowColor"
+            shadColA = mc.getAttr(shadCol)
+            attrDict['lightType'] = 'mesh'
+        elif l in pl:
+            shadCol = l + ".shadowColor"
+            shadColA = mc.getAttr(shadCol)
+            shad = l + '.aiCastShadows'
+            if shadColA == [(1.0, 1.0, 1.0)]:    
+                shadA = False
+            else:
+                shadA = True
+            attrDict['lightType'] = 'point'
+        else:
+            pass
 
-        shadCol = l + ".aiShadowColor"
-        shadColA = mc.getAttr(shadCol)
-
-        attrDict['lightType'] = 'mesh'
+        attrDict['name'] = nm  
         attrDict[exp] = expA
         attrDict[col] = colA[0]
-        #attrDict[shad] = shadA
+        attrDict[shad] = shadA
         attrDict[shadCol] = shadColA[0]
 
         lightDict[topTr] = attrDict
