@@ -41,11 +41,12 @@ EYEMASK_NAMES = ["rig:eyeLeft_geo_mask", "rig:eyeRight_geo_mask"]
 FACE_NAMES = ["rig:mouth_geo", "rig:noseLeft_geo"]
 
 MAT_CHANNEL_LIST = ['color']
-LIGHT_CHANNEL_LIST = ['color', 'aiShadowColor', 'aiExposure']
+LIGHT_CHANNEL_LIST = ['color', 'aiShadowColor', 'aiExposure', 'aiCastShadows']
 CHANNEL_MAP = {
     'color':'Color',
     'aiShadowColor':'Color',
     'aiExposure':'Strength',
+    'aiCastShadows':'use_shadow'
 }
 
 
@@ -88,6 +89,7 @@ def sort_objects():
         p2 = pd[obj]
         cc = None
         for c in cols:
+            thisLogger.info('obj is %s', obj)
             children = c.objects
             if obj.name in children:
                 cc = c
@@ -182,27 +184,64 @@ def apply_materials(path):
                 for mat in objMats:
                     thisLogger.warning(mat)
 
-"""
-def create_light_from_dict(nm, d, *args):
-    mat = bpy.data.materials.new(nm)
-    mat.use_nodes = True
-    nt = mat.node_tree
-    nt.nodes.remove(nt.nodes['Material Output'])
-    nt.nodes.remove(nt.nodes['Principled BSDF'])
-    mat.node_tree.links.clear()
-    moN = nt.nodes.new('ShaderNodeOutputMaterial')
-    emN = nt.nodes.new('ShaderNodeEmission')
-    mat.node_tree.links.new(emN.outputs['Emission'], moN.inputs['Surface'])
-    
-    for a in args:
-        if a == ""
-"""
-
-def set_up_lights(lightData, matName):
+def set_up_lights(path, matName):
+    f= open(path)
+    lightData = json.load(f)
+    thisLogger.info("light data is %s" % lightData)
     mat = bpy.data.materials[matName]
     for obj in lightData:
         meshLightCounter = 0
         meshLights = []
+        
+        if lightData[obj]['lightType'] == 'point':
+            #handles annoying maya bug where point light shape append #s at the end
+            parentName = lightData[obj]['name']
+            lightName = parentName + '_light'
+            if bpy.context.scene.objects.get(lightName) != None:
+                continue
+
+            l =  bpy.data.lights.new(lightName, type='POINT')
+            lo = bpy.data.objects.new(lightName, object_data=l)
+            bpy.data.collections['lights'].objects.link(lo)
+
+            for c in LIGHT_CHANNEL_LIST:
+                shapeName = bpy.data.objects[obj].children[0].name+"Shape"
+                thisLogger.info('light shape name is %s' % shapeName)
+                digits = ""
+                lSh = ""
+                for char in shapeName:
+                    try:
+                        int(char)
+                        digits += char
+                        thisLogger.info('replacing digit in light shape name, new name is %s' % lSh)
+                    except:
+                        lSh += char
+                lSh += digits
+                thisLogger.info('light shape name is %s' % lSh)
+
+                k = str(lSh+"."+c)
+                if c == 'color':
+                    col1 = lightData[obj][k]
+                    thisLogger.info('light is %s' % obj)
+                    thisLogger.info('col1 is %s' % col1)
+                    #col1.append(1.0)
+                    l.color = col1
+                    continue
+                if c == 'aiShadowColor':
+                    continue
+                if c == 'aiExposure':
+                    exp = lightData[obj][k]
+                    val = float(exp)*100000
+                    l.energy = val
+                    continue
+                if c == 'aiCastShadows':
+                    l.use_shadow = lightData[obj][k]
+                    continue
+            
+            o = bpy.data.objects[parentName]
+            thisLogger.info("making a light called %s" % o)
+            utils.copy_transforms(lo, o, False)
+
         if lightData[obj]['lightType'] == 'mesh':
             meshLight, grp = utils.create_node_group_in_mat(mat, obj)
             meshLights.append(grp)
@@ -219,6 +258,8 @@ def set_up_lights(lightData, matName):
                 k = str(lSh+"."+c)
                 if c == 'color':
                     col1 = lightData[obj][k]
+                    thisLogger.info('light is %s' % obj)
+                    thisLogger.info('col1 is %s' % col1)
                     col1.append(1.0)
                     emN1.inputs['Color'].default_value = col1
                     continue
@@ -231,6 +272,8 @@ def set_up_lights(lightData, matName):
                     exp = lightData[obj][k]
                     emN1.inputs['Strength'].default_value = exp
                     emN2.inputs['Strength'].default_value = exp
+                    continue
+                if c == 'aiCastShadows':
                     continue
 
             mthN.operation = 'GREATER_THAN'
@@ -260,7 +303,7 @@ def set_up_lights(lightData, matName):
 
             meshLightCounter += 1
             bpy.data.objects[obj].pass_index = meshLightCounter
-            bpy.data.objects[obj].visible_camera = False          
+        bpy.data.objects[obj].visible_camera = False          
     return
                
 
@@ -269,13 +312,17 @@ bpy.context.scene.render.engine = 'CYCLES'
 import_abc(p3)
 sort_objects()
 apply_materials(p1)
-f = open(p2)
-lightData = json.load(f)
-set_up_lights(lightData, 'light_mat')
-set_up_lights(lightData, 'black_mat')
+
+set_up_lights(p2, 'light_mat')
+
+set_up_lights(p2, 'black_mat')
 for obj in bpy.data.objects:
     if obj.name in HIGHLIGHT_NAMES or obj.name in NOHIGHLIGHT_NAMES or obj.name in FACE_NAMES:
         utils.add_subd(obj)
+"""
+for o in bpy.data.collections['2d'].objects:
+    o.is_shadow_catcher = True
+"""
 camCol = bpy.data.collections['cameras']
 if len(camCol.objects) < 1:
     thisLogger.critical("No camera found in %s" % camCol)
@@ -286,6 +333,15 @@ elif len(camCol.objects) > 1:
 else:
     cam = camCol.objects[0]
     bpy.context.scene.camera = cam
+
+for o in bpy.data.collections['2d'].objects:
+    shadowCatchO = o.copy()
+    bpy.data.collections['shadow_catch'].objects.link(shadowCatchO)
+    shadowCatchO.is_shadow_catcher = True
+    shadowCatchO.visible_shadow = False
+    o.visible_shadow = False
+
+
 
 
 """
